@@ -83,8 +83,9 @@ def main():
                 for j in xrange(4):
                     models[j].zerograds()
                     losses[j].backward()
-                    if j > 0:
-                        models[0].addgrads(models[j])
+
+                for j in xrange(1, 4):
+                    models[0].addgrads(models[j])
                 
                 optimizer.update()
                 for j in xrange(1, 4):
