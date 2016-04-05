@@ -26,14 +26,15 @@ def main():
 
     models = [None] * args.gpu
     models[0] = vae.VAEBernoulli(x_dim=784, 
-                                 z_dim=100,
+                                 z_dim=50,
                                  h_dim=200,
                                  n_layers=1,
-                                 activate=F.elu,
+                                 activate=F.tanh,
                                  use_dropout=False,
                                  use_bn=True,
                                  wmean=1.0,
                                  wlogvar=0.001)
+
     for i in xrange(0, args.gpu):
         if i > 0:
             models[i] = models[0].copy()
@@ -52,8 +53,8 @@ def main():
     N_test = len(x_test)
 
     for step in xrange(7):
-        n_epoch = 3 ** step
-        optimizer.alpha = 0.01 * (10.0 ** (-step / 7.0))
+        n_epoch = 50 * 3 ** step
+        optimizer.alpha = 0.001 * (10.0 ** (-step / 7.0))
         print "alpha=", optimizer.alpha
         for epoch in xrange(1, n_epoch+1):
             perm = np.random.permutation(N)
@@ -74,8 +75,6 @@ def main():
                     with cuda.get_device(j):
                         losses[j] = models[j](xb_gpu[j])
 
-                for j in xrange(args.gpu):
-                    train_loss_sum += losses[j].data.get()
 
                 for j in xrange(args.gpu):
                     models[j].zerograds()
@@ -87,6 +86,9 @@ def main():
                 optimizer.update()
                 for j in xrange(1, args.gpu):
                     models[j].copyparams(models[0])
+
+                for j in xrange(args.gpu):
+                    train_loss_sum += losses[j].data.get()
 
             test_loss_sum = 0
             for i in xrange(0, N_test, batchsize):

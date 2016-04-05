@@ -2,6 +2,7 @@ import chainer.functions as F
 import chainer.links as L
 import chainer
 import time
+import WNLinear
 
 def _in(i):
     return 'in_{}'.format(i)
@@ -33,13 +34,13 @@ class MLP(chainer.Chain):
         layers = {}
 
         for i, shape in enumerate(in_shapes):
-            layers[_in(i)] = L.Linear(shape, n_units)
+            layers[_in(i)] = WNLinear.WNLinear(shape, n_units)
 
         for i in xrange(n_layers):
-            layers[_fc(i)] = L.Linear(n_units, n_units)
+            layers[_fc(i)] = WNLinear.WNLinear(n_units, n_units)
 
         for i, shape in enumerate(out_shapes):
-            layers[_out(i)] = L.Linear(n_units, shape, wscale=out_wscales[i])
+            layers[_out(i)] = WNLinear.WNLinear(n_units, shape, wscale=out_wscales[i])
 
         if use_bn:
             for i in xrange(n_layers+1):
@@ -62,6 +63,7 @@ class MLP(chainer.Chain):
 
         if self.use_bn:
             h = self[_bn(0)](h)
+        h = self.activate(h)
 
         for i in xrange(self.n_layers):
             h = self[_fc(i)](h)
