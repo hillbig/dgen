@@ -1,6 +1,7 @@
 import chainer.functions as F
 import chainer.links as L
 import chainer
+import time
 
 def _in(i):
     return 'in_{}'.format(i)
@@ -71,6 +72,7 @@ class MLP(chainer.Chain):
                 h = F.dropout(h, train=self.train)
 
         outputs = tuple(self[_out(i)](h) for i in xrange(len(self.out_shapes)))
+
         return outputs
         
 

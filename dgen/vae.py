@@ -2,6 +2,7 @@ import chainer
 from chainer import Variable
 import chainer.functions as F
 import mlp
+import time
 
 class VAEGaussian(chainer.Chain):
     def __init__(self, x_dim, z_dim, h_dim, n_layers,
@@ -62,12 +63,13 @@ class VAEBernoulli(chainer.Chain):
                 use_bn=use_bn))
 
     def __call__(self, x):
-        xp = self.encoder.xp
-        x = Variable(xp.asarray(x))
+        x = Variable(x)
+        start = time.time()
         zm, zv = self.encoder((x,))
         z = F.gaussian(zm, zv)
         y = self.decoder((z,))[0]
         kl_loss = F.gaussian_kl_divergence(zm, zv)
         nll_loss = F.bernoulli_nll(x, y)
+
         loss = kl_loss + nll_loss
         return loss
